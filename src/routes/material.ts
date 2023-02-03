@@ -8,10 +8,10 @@ const materialController = new MaterialController()
 
 materialRouter.get("/materials", verifyToken, verifyPermission([Roles.ADM]), materialController.getAll)
 
-materialRouter.get("/materials/:id", materialController.getById)
+materialRouter.get("/materials/:id",verifyToken, verifyPermission([Roles.ADM]), materialController.getById)
 
-materialRouter.post("/materials", materialController.create)
+materialRouter.post("/materials",verifyToken, verifyPermission([Roles.ADM]), materialController.create)
 
-materialRouter.put("/materials/:id", materialController.update)
+materialRouter.put("/materials/:id",verifyToken, verifyPermission([Roles.ADM]), materialController.update)
 
-materialRouter.delete("/materials/:id", materialController.delete)
+materialRouter.delete("/materials/:id",verifyToken, verifyPermission([Roles.ADM]), materialController.delete)
