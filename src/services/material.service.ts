@@ -9,12 +9,12 @@ export class MaterialService {
     }
 
     async getAll(): Promise<ApiResponse> {
-        const users = await this.materialDal.getAll()
+        const materials = await this.materialDal.getAll()
         return {
             statusCode: 200,
             type: ResponseType.Success,
             message: "Successfully to retrieve all the materials",
-            data: users
+            data: materials
         }
     }
 

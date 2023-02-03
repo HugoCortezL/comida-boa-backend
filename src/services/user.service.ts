@@ -1,6 +1,5 @@
 import { UserDal } from "../data-access/user.dal"
 import { User, ApiResponse, ResponseType } from "../models"
-import { Validator } from "../utils/Validator"
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import { validateUser, validateUserInput } from "../validators/user"
@@ -9,10 +8,8 @@ require('dotenv').config()
 
 export class UserService {
     userDal: UserDal
-    validator: Validator
     constructor() {
         this.userDal = new UserDal()
-        this.validator = new Validator()
     }
 
     async getAll(): Promise<ApiResponse> {
