@@ -1,40 +1,53 @@
 require('dotenv').config()
 import jwt, { JwtPayload } from 'jsonwebtoken'
-import { Request } from 'express';
-import { ResponseType, Roles } from '../models';
+import { NextFunction, Request, Response } from 'express';
+import { ResponseType } from '../models';
 
-export const verifyToken = (req: Request, rolePermission: Roles[]) => {
+export const verifyToken = async (req: Request, res: Response, next: NextFunction) => {
     const token = req.headers["x-access-token"];
 
     if (!token || Array.isArray(token)) {
-        return {
+        res.status(401).send({
             statusCode: 401,
             type: ResponseType.Error,
             message: "Unauthorized"
-        }
+        })
+        return
     }
+
     try {
         const secret = process.env.TOKEN_KEY
         const decoded = jwt.verify(token, (secret || "123")) as JwtPayload;
-        if (rolePermission.includes(decoded.role)) {
-            return {
-                statusCode: 200,
-                type: ResponseType.Success,
-                message: "Advance",
-            }
-        }
-        else {
-            return {
-                statusCode: 403,
-                type: ResponseType.Error,
-                message: "Forbidden",
-            }
-        }
+        req.params.role = decoded.role
+        return next()
     } catch (err) {
-        return {
+        res.status(401).send({
             statusCode: 401,
             type: ResponseType.Error,
             message: "Unauthorized",
-        }
+        })
+        return
     }
 };
+
+export const verifyPermission = (allowedRoles: string[]) => {
+    return async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const role = req.params.role
+            if (role && allowedRoles.includes(role)) {
+                next()
+                return
+            }
+            else {
+                res.status(403).send({
+                    statusCode: 403,
+                    type: ResponseType.Error,
+                    message: "Forbidden"
+                })
+                return
+            }
+        } catch (error) {
+            next(error)
+        }
+    }
+}
