@@ -3,6 +3,7 @@ import { User, ApiResponse, ResponseType } from "../models"
 import { Validator } from "../utils/Validator"
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
+import { validateUser, validateUserInput } from "../validators/user"
 
 require('dotenv').config()
 
@@ -43,46 +44,14 @@ export class UserService {
         }
     }
 
-    async #validateUser(user: User) {
-        //Validate user.name
-        if (!user.name || !this.validator.validSimpleString(user.name, 3)) {
-            return false
-        }
-        
-        // Validate user.email
-        if (!this.validator.validEmail(user.email)) {
-            return false
-        }
-        
-        //validate user.password
-        if (!this.validator.validPassword(user.password)) {
-            return false
-        }
-
-        return true
-    }
-
-    async #validateUserInput(user: User) {
-        // Validate user.email
-        if (!this.validator.validEmail(user.email)) {
-            return false
-        }
-        
-        //validate user.password
-        if (!this.validator.validPassword(user.password)) {
-            return false
-        }
-
-        return true
-    }
-
     async create(data: User): Promise<ApiResponse> {
-        const validUser = await this.#validateUser(data)
-        if (!validUser) {
+        const validUser = await validateUser(data)
+        if (!validUser.success) {
             return {
                 statusCode: 400,
                 message: "User not valid",
-                type: ResponseType.Error
+                type: ResponseType.InputError,
+                data: validUser
             }
         }
         const oldUser = await this.userDal.getOne({ email: data.email.toLowerCase() });
@@ -131,12 +100,13 @@ export class UserService {
     }
 
     async login(data: User): Promise<ApiResponse> {
-        const validUser = await this.#validateUserInput(data)
+        const validUser = validateUserInput(data)
         if (!validUser) {
             return {
                 statusCode: 400,
                 message: "User not valid",
-                type: ResponseType.Error
+                type: ResponseType.InputError,
+                data: validUser
             }
         }
         const user = await this.userDal.getOne({ email: data.email.toLowerCase() });
@@ -173,12 +143,13 @@ export class UserService {
     }
 
     async update(id: number, data: User): Promise<ApiResponse> {
-        const validUser = await this.#validateUser(data)
+        const validUser = await validateUser(data)
         if (!validUser) {
             return {
                 statusCode: 400,
                 message: "User not valid",
-                type: ResponseType.Error
+                type: ResponseType.InputError,
+                data: validUser
             }
         }
         const encryptedPassword = await bcrypt.hash(data.password, 10)

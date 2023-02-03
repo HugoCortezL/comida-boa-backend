@@ -1,7 +1,8 @@
 export enum ResponseType {
     Error = "Error",
     Warning = "Warning",
-    Success = "Success"
+    Success = "Success",
+    InputError = "Input Error"
 }
 
 export type ApiResponse = {

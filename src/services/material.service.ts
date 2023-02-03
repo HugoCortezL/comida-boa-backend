@@ -1,13 +1,11 @@
 import { MaterialDal } from "../data-access/material.dal"
 import { Material, ApiResponse, ResponseType } from "../models"
-import { Validator } from "../utils/Validator"
+import { validateMaterial } from "../validators/material"
 
 export class MaterialService {
     materialDal: MaterialDal
-    validator: Validator
     constructor() {
         this.materialDal = new MaterialDal()
-        this.validator = new Validator()
     }
 
     async getAll(): Promise<ApiResponse> {
@@ -39,22 +37,14 @@ export class MaterialService {
         }
     }
 
-    async #validateMaterial(material: Material) {
-        //Validate user.name
-        if (!material.name || !this.validator.validSimpleString(material.name, 2)) {
-            return false
-        }
-
-        return true
-    }
-
     async create(data: Material): Promise<ApiResponse> {
-        const validMaterial = await this.#validateMaterial(data)
-        if (!validMaterial) {
+        const validMaterial = await validateMaterial(data)
+        if (!validMaterial.success) {
             return {
                 statusCode: 400,
                 message: "Material not valid",
-                type: ResponseType.Error
+                type: ResponseType.InputError,
+                data: validMaterial
             }
         }
         const oldMaterial = await this.materialDal.getOne({ name: data.name.toLowerCase() });
@@ -86,12 +76,13 @@ export class MaterialService {
     }
 
     async update(id: number, data: Material): Promise<ApiResponse> {
-        const validMaterial = await this.#validateMaterial(data)
-        if (!validMaterial) {
+        const validMaterial = await validateMaterial(data)
+        if (!validMaterial.success) {
             return {
                 statusCode: 400,
                 message: "Material not valid",
-                type: ResponseType.Error
+                type: ResponseType.InputError,
+                data: validMaterial
             }
         }
 
