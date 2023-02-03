@@ -1,0 +1,175 @@
+//npx prisma migrate dev --name comida_boa_db
+
+datasource db {
+    provider = "mysql"
+    url      = env("DATABASE_URL")
+}
+
+generator client {
+    provider = "prisma-client-js"
+}
+
+enum Roles {
+    ADM
+    CHEF
+    USER
+}
+
+model User {
+    id        Int        @id @default(autoincrement())
+    name      String     @db.VarChar(150)
+    email     String     @unique @db.VarChar(150)
+    password  String     @db.VarChar(150)
+    createdAt DateTime   @default(now()) @map("created_at")
+    updatedAt DateTime   @default(now()) @updatedAt @map("updated_at")
+    role      Roles      @default(USER)
+    Review    Review[]
+    Favorite  Favorite[]
+
+    @@map("users")
+}
+
+model Material {
+    id         Int          @id @default(autoincrement())
+    name       String       @unique @db.VarChar(150)
+    Ingredient Ingredient[]
+
+    @@map("materials")
+}
+
+model Portion {
+    id         Int          @id @default(autoincrement())
+    name       String       @unique @db.VarChar(150)
+    Ingredient Ingredient[]
+
+    @@map("portions")
+}
+
+model Utensil {
+    id             Int              @id @default(autoincrement())
+    name           String           @unique @db.VarChar(150)
+    image          Bytes
+    RecipeUtensils RecipeUtensils[]
+
+    @@map("utensils")
+}
+
+model Category {
+    id     Int      @id @default(autoincrement())
+    name   String   @unique @db.VarChar(150)
+    Recipe Recipe[]
+
+    @@map("categories")
+}
+
+model Cousine {
+    id     Int      @id @default(autoincrement())
+    name   String   @unique @db.VarChar(150)
+    Recipe Recipe[]
+
+    @@map("cousines")
+}
+
+model Recipe {
+    id         Int        @id @default(autoincrement())
+    name       String     @unique @db.VarChar(150)
+    image      Bytes
+    difficulty Difficulty @default(LOW)
+    serves     Int
+    time       Int
+    rate       Float
+    rateAmount Int
+    category   Category   @relation(fields: [categoryId], references: [id])
+    categoryId Int
+    cousine    Cousine    @relation(fields: [cousineId], references: [id])
+    cousineId  Int
+
+    createdAt        DateTime           @default(now()) @map("created_at")
+    updatedAt        DateTime           @updatedAt @map("updated_at")
+    Review           Review[]
+    Favorite         Favorite[]
+    RecipeStep       RecipeStep[]
+    RecipeIngredient RecipeIngredient[]
+    RecipeUtensils   RecipeUtensils[]
+
+    @@map("recipes")
+}
+
+enum Difficulty {
+    LOW
+    MID
+    HIGH
+}
+
+model Step {
+    id          Int          @id @default(autoincrement())
+    position    Int
+    description String       @db.VarChar(300)
+    RecipeStep  RecipeStep[]
+
+    @@map("steps")
+}
+
+model Ingredient {
+    id               Int                @id @default(autoincrement())
+    name             String             @db.VarChar(150)
+    quantity         Int
+    material         Material           @relation(fields: [materialId], references: [id])
+    materialId       Int
+    portion          Portion            @relation(fields: [portionId], references: [id])
+    portionId        Int
+    RecipeIngredient RecipeIngredient[]
+
+    @@map("ingredients")
+}
+
+model Review {
+    id       Int    @id @default(autoincrement())
+    recipe   Recipe @relation(fields: [recipeId], references: [id])
+    recipeId Int
+    user     User   @relation(fields: [userId], references: [id])
+    userId   Int
+    rate     Int
+
+    @@map("reviews")
+}
+
+model Favorite {
+    id       Int    @id @default(autoincrement())
+    recipe   Recipe @relation(fields: [recipeId], references: [id])
+    recipeId Int
+    user     User   @relation(fields: [userId], references: [id])
+    userId   Int
+
+    @@map("favorites")
+}
+
+model RecipeStep {
+    id       Int    @id @default(autoincrement())
+    recipe   Recipe @relation(fields: [recipeId], references: [id])
+    recipeId Int
+    step     Step   @relation(fields: [stepId], references: [id])
+    stepId   Int
+
+    @@map("recipeSteps")
+}
+
+model RecipeIngredient {
+    id           Int        @id @default(autoincrement())
+    recipe       Recipe     @relation(fields: [recipeId], references: [id])
+    recipeId     Int
+    ingredient   Ingredient @relation(fields: [ingredientId], references: [id])
+    ingredientId Int
+
+    @@map("recipeIngredients")
+}
+
+model RecipeUtensils {
+    id         Int     @id @default(autoincrement())
+    recipe     Recipe  @relation(fields: [recipeId], references: [id])
+    recipeId   Int
+    utensils   Utensil @relation(fields: [utensilsId], references: [id])
+    utensilsId Int
+
+    @@map("recipeUtensilss")
+}
